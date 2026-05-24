@@ -95,6 +95,7 @@ interface ChatState {
   searchMemories: (query: string) => MemoryEntry[]
   touchMemory: (id: string) => void
   getImportantMemories: (limit?: number) => MemoryEntry[]
+  syncMemories: () => Promise<void>
 }
 
 export const useChatStore = create<ChatState>()(
@@ -261,11 +262,14 @@ export const useChatStore = create<ChatState>()(
           accessCount: 0,
         }
         set((s) => ({ memories: [...s.memories, entry] }))
+        // Sync to SQLite via IPC (fire and forget)
+        window.electron.memory.save({ type, content, importance, tags }).catch(() => {})
       },
 
-      removeMemory: (id) => set((s) => ({
-        memories: s.memories.filter(m => m.id !== id),
-      })),
+      removeMemory: (id) => {
+        set((s) => ({ memories: s.memories.filter(m => m.id !== id) }))
+        window.electron.memory.delete(id).catch(() => {})
+      },
 
       searchMemories: (query) => {
         const state = get()
@@ -295,6 +299,27 @@ export const useChatStore = create<ChatState>()(
             return scoreB - scoreA
           })
           .slice(0, limit)
+      },
+
+      /** Load memories from SQLite into local cache on startup */
+      syncMemories: async () => {
+        try {
+          const remote = await window.electron.memory.recent(200)
+          if (Array.isArray(remote) && remote.length > 0) {
+            set({
+              memories: remote.map((m: { id: string; content: string; type: MemoryEntry['type']; importance: number; tags?: string[]; createdAt?: string; lastAccessed?: string; accessCount?: number }) => ({
+                id: m.id,
+                content: m.content,
+                type: m.type,
+                importance: m.importance,
+                tags: m.tags || [],
+                createdAt: new Date(m.createdAt || Date.now()),
+                lastAccessed: new Date(m.lastAccessed || m.createdAt || Date.now()),
+                accessCount: m.accessCount || 0,
+              })),
+            })
+          }
+        } catch { /* IPC not available */ }
       },
     }),
     {

@@ -2,10 +2,11 @@ import { useEffect } from 'react'
 import { Toaster } from 'sonner'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { AppLayout } from './layouts/AppLayout'
+import { useChatStore } from './store/chatStore'
 import './App.css'
 
 function App() {
-  // Auto-load saved OSINT token on startup
+  // Auto-load saved OSINT token and sync memories on startup
   useEffect(() => {
     const savedToken = localStorage.getItem('nexus-osint-token')
     if (savedToken) {
@@ -17,6 +18,8 @@ function App() {
         window.electron.osint.setToken(defaultToken).catch(() => {})
       }
     }
+    // Sync memories from SQLite to local cache
+    useChatStore.getState().syncMemories()
   }, [])
 
   return (

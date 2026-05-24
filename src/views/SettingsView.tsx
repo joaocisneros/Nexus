@@ -4,7 +4,9 @@ import { useChatStore } from '@/store/chatStore'
 
 export function SettingsView() {
   const { currentModel, setCurrentModel } = useChatStore()
-  const [theme] = useState<'dark' | 'light'>('dark')
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    return (localStorage.getItem('nexus-theme') as 'dark' | 'light') || 'dark'
+  })
   const [osintToken, setOsintToken] = useState('')
   const [showToken, setShowToken] = useState(false)
   const [tokenStatus, setTokenStatus] = useState<'idle' | 'testing' | 'ok' | 'error'>('idle')
@@ -17,6 +19,11 @@ export function SettingsView() {
       setTokenStatus('ok')
     }
   }, [])
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('light', theme === 'light')
+    localStorage.setItem('nexus-theme', theme)
+  }, [theme])
 
   const handleSaveToken = async () => {
     if (!osintToken.trim()) return
@@ -85,7 +92,12 @@ export function SettingsView() {
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm text-foreground">Tema</span>
-            <span className="text-sm text-muted-foreground capitalize">{theme}</span>
+            <button
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="px-3 py-1 rounded-lg bg-muted/50 border border-border text-sm text-foreground hover:bg-accent transition-colors capitalize"
+            >
+              {theme === 'dark' ? 'Oscuro' : 'Claro'}
+            </button>
           </div>
         </div>
 

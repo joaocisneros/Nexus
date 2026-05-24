@@ -1,4 +1,4 @@
-import { useState, useRef, KeyboardEvent } from 'react'
+import { useState, useRef, useEffect, KeyboardEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Send, Mic, Paperclip, Search, ChevronDown, ChevronUp, X, FileText, Image } from 'lucide-react'
 import { cn } from '@/utils/cn'
@@ -23,6 +23,35 @@ export function ChatInput({ onSend, onToggleRightPanel }: ChatInputProps) {
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([])
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const recognitionRef = useRef<SpeechRecognition | null>(null)
+
+  // Initialize Web Speech API
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition()
+      recognition.continuous = false
+      recognition.interimResults = true
+      recognition.lang = 'es-ES'
+
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
+        const transcript = Array.from(event.results)
+          .map(result => result[0].transcript)
+          .join('')
+        setMessage(transcript)
+      }
+
+      recognition.onend = () => {
+        setIsRecording(false)
+      }
+
+      recognition.onerror = () => {
+        setIsRecording(false)
+      }
+
+      recognitionRef.current = recognition
+    }
+  }, [])
 
   const adjustTextareaHeight = () => {
     if (textareaRef.current) {
@@ -248,7 +277,17 @@ export function ChatInput({ onSend, onToggleRightPanel }: ChatInputProps) {
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          onClick={() => setIsRecording(!isRecording)}
+          onClick={() => {
+            if (!recognitionRef.current) return
+            if (isRecording) {
+              recognitionRef.current.stop()
+              setIsRecording(false)
+            } else {
+              setMessage('')
+              recognitionRef.current.start()
+              setIsRecording(true)
+            }
+          }}
           className={cn(
             'flex-shrink-0 p-2.5 rounded-xl transition-colors border',
             isRecording

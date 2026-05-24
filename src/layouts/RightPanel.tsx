@@ -101,13 +101,19 @@ export function RightPanel({ isOpen, onClose }: RightPanelProps) {
       title: 'Tareas Activas',
       content: (
         <div className="space-y-2">
+          {status?.actions ? (
+            <div className="glass-card p-2 rounded-lg">
+              <p className="text-xs font-medium text-foreground">Acciones ejecutadas</p>
+              <p className="text-xs text-muted-foreground">{status.actions} completadas</p>
+            </div>
+          ) : (
+            <div className="glass-card p-2 rounded-lg">
+              <p className="text-xs text-muted-foreground">Sin tareas activas</p>
+            </div>
+          )}
           <div className="glass-card p-2 rounded-lg">
-            <p className="text-xs font-medium text-foreground">Analizando código</p>
-            <p className="text-xs text-muted-foreground">80% completo</p>
-          </div>
-          <div className="glass-card p-2 rounded-lg">
-            <p className="text-xs font-medium text-foreground">Buscando dependencias</p>
-            <p className="text-xs text-muted-foreground">En progreso...</p>
+            <p className="text-xs font-medium text-foreground">Reflexiones</p>
+            <p className="text-xs text-muted-foreground">{status?.thoughts ?? 0} procesadas</p>
           </div>
         </div>
       )
