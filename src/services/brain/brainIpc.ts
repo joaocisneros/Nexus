@@ -8,7 +8,7 @@ const localBrain = new LocalBrain()
 
 function getCapabilities(): SystemCapabilities {
   return {
-    aiAvailable: !!process.env.OPENAI_API_KEY,
+    aiAvailable: !!(process.env.OPENAI_API_KEY || process.env.OPENGATEWAY_API_KEY),
     webAvailable: true,
     localCapabilities: ['greeting', 'system', 'project', 'file'],
   }

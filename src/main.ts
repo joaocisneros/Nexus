@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'path'
 import { initializeAI, aiChat, aiStream } from './services/ai/aiIpc'
@@ -9,6 +10,7 @@ import { registerWorkflowHandlers } from './services/workflow/WorkflowEngine'
 import { registerGoalHandlers } from './services/goal/goalIpc'
 import { registerImagePromptHandlers } from './services/image/ImagePromptService'
 import { registerGitlawbHandlers } from './services/gitlawb/gitlawbIpc'
+import { startAutoSync } from './services/gitlawb/MemorySync'
 import type { AIMessage } from './types'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -72,6 +74,9 @@ app.whenReady().then(() => {
   registerGoalHandlers()
   registerImagePromptHandlers()
   registerGitlawbHandlers()
+
+  // Start auto-sync for gitlawb memory (every 5 minutes if connected)
+  startAutoSync()
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

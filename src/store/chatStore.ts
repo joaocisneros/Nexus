@@ -4,7 +4,7 @@ import type { Message } from '@/types'
 
 export type { Message }
 
-export type ViewId = 'chat' | 'projects' | 'terminal' | 'memory' | 'monitor' | 'workflows' | 'goals' | 'image-prompts' | 'settings' | 'workflows' | 'prompts' | 'goals' | 'gitlawb'
+export type ViewId = 'chat' | 'projects' | 'terminal' | 'memory' | 'monitor' | 'workflows' | 'goals' | 'image-prompts' | 'settings' | 'prompts' | 'gitlawb'
 
 // Chat Forking
 export interface ChatFork {

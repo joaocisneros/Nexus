@@ -127,6 +127,22 @@ export function isConnected(): boolean {
   return connected
 }
 
+export function disconnect(): void {
+  connected = false
+  lastSync = null
+  eventSubscribers = []
+}
+
+export function setIdentity(newIdentity: GitlawbIdentity): void {
+  identity = newIdentity
+  // Persist to disk
+  try {
+    const fs = require('fs')
+    const identityPath = getIdentityPath()
+    fs.writeFileSync(identityPath, JSON.stringify(newIdentity, null, 2))
+  } catch { /* ignore write errors */ }
+}
+
 export async function getNodeInfo(): Promise<GitlawbNodeInfo> {
   const data = await apiRequest('/') as Record<string, unknown>
   return {
@@ -180,6 +196,18 @@ export async function listAgents(capabilities?: string[]): Promise<GitlawbAgent[
 export async function getAgentTrustScore(did: string): Promise<number> {
   const data = await apiRequest(`/agents/${encodeURIComponent(did)}/trust`) as { trustScore: number }
   return data.trustScore || 0
+}
+
+export async function registerAgent(capabilities: string[], alias?: string): Promise<GitlawbAgent> {
+  const data = await apiRequest('/agents/register', {
+    method: 'POST',
+    body: JSON.stringify({
+      did: identity?.did,
+      alias: alias || identity?.alias || 'NEXUS',
+      capabilities,
+    }),
+  }) as { agent: GitlawbAgent }
+  return data.agent
 }
 
 // --- Memory Sync ---

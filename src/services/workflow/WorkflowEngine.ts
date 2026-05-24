@@ -161,13 +161,46 @@ class WorkflowEngine {
             step.result = 'Output generado'
             break
 
-          case 'condition':
-            step.result = true
+          case 'condition': {
+            // Evaluate condition: check config.expression against previous step results
+            const expr = (step.config.expression as string) || ''
+            const prevResults = workflow.steps
+              .filter(s => s.result)
+              .map(s => `${s.name}: ${JSON.stringify(s.result)}`)
+              .join('\n')
+            if (expr && step.config.ai) {
+              const evalResult = await aiChat([
+                { role: 'system', content: 'Evalúa si la condición es verdadera o falsa. Responde SOLO "true" o "false".' },
+                { role: 'user', content: `Condición: ${expr}\n\nContexto:\n${prevResults}` },
+              ])
+              step.result = evalResult.trim().toLowerCase().startsWith('true')
+            } else {
+              step.result = !!(step.config.value ?? true)
+            }
             break
+          }
 
-          case 'loop':
-            step.result = 'Loop completado'
+          case 'loop': {
+            const times = (step.config.times as number) || 1
+            const results: unknown[] = []
+            for (let i = 0; i < times; i++) {
+              if (step.config.ai) {
+                const context = workflow.steps
+                  .filter(s => s.result)
+                  .map(s => `${s.name}: ${JSON.stringify(s.result).slice(0, 100)}`)
+                  .join('\n')
+                const loopResult = await aiChat([
+                  { role: 'system', content: `Eres NEXUS ejecutando iteración ${i + 1}/${times} de un loop. Sé conciso.` },
+                  { role: 'user', content: `Tarea: ${step.name}\nContexto:\n${context}` },
+                ])
+                results.push(loopResult)
+              } else {
+                results.push(`Iteración ${i + 1}`)
+              }
+            }
+            step.result = results
             break
+          }
         }
 
         step.status = 'completed'

@@ -11,10 +11,11 @@ function App() {
     if (savedToken) {
       window.electron.osint.setToken(savedToken).catch(() => {})
     } else {
-      // Default CODART token
-      const defaultToken = 'ADpxS0xLUbVxzxgua4uymtRwvqj1b7i5BB55ZEpjhB3qJS5QgpKL4dyDkWAV'
-      localStorage.setItem('nexus-osint-token', defaultToken)
-      window.electron.osint.setToken(defaultToken).catch(() => {})
+      const defaultToken = import.meta.env.VITE_CODART_TOKEN || ''
+      if (defaultToken) {
+        localStorage.setItem('nexus-osint-token', defaultToken)
+        window.electron.osint.setToken(defaultToken).catch(() => {})
+      }
     }
   }, [])
 

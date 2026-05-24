@@ -16,11 +16,22 @@ export function registerGitlawbHandlers() {
 
   ipcMain.handle('gitlawb:identity-create', async (_event, alias?: string) => {
     try {
-      const identity = GitlawbService.getIdentity()
-      if (identity && alias) {
-        identity.alias = alias
+      const existing = GitlawbService.getIdentity()
+      if (existing) {
+        if (alias) {
+          const updated = { ...existing, alias }
+          GitlawbService.setIdentity(updated)
+          return { success: true, result: updated }
+        }
+        return { success: true, result: existing }
       }
-      return { success: true, result: identity }
+      // Generate new identity via initialize
+      await GitlawbService.initialize()
+      const newIdentity = GitlawbService.getIdentity()
+      if (newIdentity && alias) {
+        GitlawbService.setIdentity({ ...newIdentity, alias })
+      }
+      return { success: true, result: GitlawbService.getIdentity() }
     } catch (error) {
       return { success: false, error: error instanceof Error ? error.message : String(error) }
     }
@@ -38,6 +49,7 @@ export function registerGitlawbHandlers() {
 
   ipcMain.handle('gitlawb:disconnect', async () => {
     try {
+      GitlawbService.disconnect()
       return { success: true }
     } catch (error) {
       return { success: false, error: error instanceof Error ? error.message : String(error) }
@@ -75,8 +87,8 @@ export function registerGitlawbHandlers() {
   // === Agents ===
   ipcMain.handle('gitlawb:agent-register', async (_event, capabilities: string[]) => {
     try {
-      const agents = await GitlawbService.listAgents(capabilities)
-      return { success: true, result: agents }
+      const agent = await GitlawbService.registerAgent(capabilities)
+      return { success: true, result: agent }
     } catch (error) {
       return { success: false, error: error instanceof Error ? error.message : String(error) }
     }
