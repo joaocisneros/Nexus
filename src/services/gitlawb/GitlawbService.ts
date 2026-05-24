@@ -49,7 +49,7 @@ function publicKeyToDID(publicKeyDer: string): string {
 }
 
 async function apiRequest(endpoint: string, options: RequestInit = {}): Promise<unknown> {
-  const url = `${config.nodeUrl}/api/v1${endpoint}`
+  const url = `${config.nodeUrl}${endpoint}`
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...((options.headers as Record<string, string>) || {}),
@@ -128,7 +128,7 @@ export function isConnected(): boolean {
 }
 
 export async function getNodeInfo(): Promise<GitlawbNodeInfo> {
-  const data = await apiRequest('/node/info') as Record<string, unknown>
+  const data = await apiRequest('/') as Record<string, unknown>
   return {
     url: config.nodeUrl,
     version: (data.version as string) || 'unknown',

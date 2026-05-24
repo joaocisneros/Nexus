@@ -58,6 +58,9 @@ app.whenReady().then(() => {
   initializeAI({
     openaiApiKey: process.env.OPENAI_API_KEY || '',
     ollamaHost: process.env.OLLAMA_HOST || 'http://localhost:11434',
+    openGatewayKey: process.env.OPENGATEWAY_API_KEY || '',
+    openGatewayUrl: process.env.OPENGATEWAY_URL || 'https://opengateway.gitlawb.com/v1',
+    openGatewayModel: process.env.OPENGATEWAY_MODEL || 'mimo-v2-pro',
   })
 
   // Register all IPC handlers
